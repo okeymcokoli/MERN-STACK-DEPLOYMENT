@@ -68,7 +68,8 @@
    kubectl apply -f ./frontend/frontend-deployment.yaml
    ```
 
-   ```kubectl apply -f ./frontend/frontend-service.yaml
+   ```
+   kubectl apply -f ./frontend/frontend-service.yaml
    ```
 
    ```
@@ -87,7 +88,8 @@
    kubectl apply -f ./backend/deployment.yaml
    ```
 
-   ```kubectl get all
+   ```
+   kubectl get all
    ```
    Verify all pods and svcs are deployed and running, access your application using the ClusterIP, NodePort or LoadBalancer
 
