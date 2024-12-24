@@ -1,0 +1,14 @@
+replicaCount: 1
+
+image:
+  repository: okeymcokoli/mern-backend
+  pullPolicy: IfNotPresent
+  tag: v1
+
+service:
+  type: ClusterIP
+  port: 5050
+
+env:
+  - name: MONGO_URI
+    value: "mongodb://mongodb:27017/mydatabase"

@@ -1,0 +1,14 @@
+replicaCount: 1
+
+image:
+  repository: okeymcokoli/mern-frontend
+  pullPolicy: IfNotPresent
+  tag: v1
+
+service:
+  type: ClusterIP
+  port: 5173
+
+env:
+  - name: REACT_APP_API_URL
+    value: "http://backend:5050"
