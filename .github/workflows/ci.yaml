@@ -76,9 +76,7 @@ jobs:
         # Update the frontend and backend Docker image tags in the manifests
         sed -i 's|okeymcokoli/mern-frontend:v1|okeymcokoli/mern-frontend:v1|g' manifests/frontend/deployment.yaml
         sed -i 's|okeymcokoli/mern-backend:v1|okeymcokoli/mern-backend:v1|g' manifests/backend/deployment.yaml
-        # Optionally update MongoDB image tag if needed
-        sed -i 's|mongo:latest|mongo:v1|g' manifests/mongodb/deployment.yaml
-
+        
     - name: Commit and push updated manifests
       run: |
         git config --global user.name "GitHub Actions"
