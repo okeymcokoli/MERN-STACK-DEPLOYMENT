@@ -110,47 +110,21 @@ jobs:
       with:
         repository: okeymcokoli/MERN-STACK-DEPLOYMENT  # Use your GitHub repo URL
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Cache Docker layers
-      uses: actions/cache@v2
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
-
-    # Static Code Analysis for Frontend (React)
-    - name: Set up Node.js for Frontend
+    - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'  # specify the Node.js version for the frontend
+        node-version: '16'  # specify the Node.js version for both frontend and backend
 
+    # Install dependencies for Frontend (React)
     - name: Install frontend dependencies
       run: |
         cd mern/frontend
-        npm install
+        npm install  # Install frontend dependencies
 
+    # Static Code Analysis for Frontend (React)
     - name: Run ESLint for frontend
       run: |
         cd mern/frontend
-        npm run lint  # assumes `npm run lint` is configured in package.json
-
-    # Static Code Analysis for Backend (Node.js)
-    - name: Set up Node.js for Backend
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'  # specify the Node.js version for the backend
-
-    - name: Install backend dependencies
-      run: |
-        cd mern/backend
-        npm install
-
-    - name: Run ESLint for backend
-      run: |
-        cd mern/backend
         npm run lint  # assumes `npm run lint` is configured in package.json
 
     # Run Unit Tests for Frontend (React)
@@ -159,35 +133,36 @@ jobs:
         cd mern/frontend
         npm run test -- --coverage  # assumes `npm run test` is configured to run tests
 
+    # Install dependencies for Backend (Node.js)
+    - name: Install backend dependencies
+      run: |
+        cd mern/backend
+        npm install  # Install backend dependencies
+
+    # Static Code Analysis for Backend (Node.js)
+    - name: Run ESLint for backend
+      run: |
+        cd mern/backend
+        npm run lint  # assumes `npm run lint` is configured in package.json
+
     # Run Unit Tests for Backend (Node.js)
     - name: Run unit tests for backend
       run: |
         cd mern/backend
         npm run test -- --coverage  # assumes `npm run test` is configured to run tests
 
-    # Build Docker Images with dynamic versioning (v1, v2, v3)
-    - name: Set version tag based on commit hash
-      id: version
-      run: |
-        VERSION="v1"
-        if [[ "${{ github.sha }}" == *"a"* ]]; then
-          VERSION="v2"
-        elif [[ "${{ github.sha }}" == *"b"* ]]; then
-          VERSION="v3"
-        fi
-        echo "VERSION=${VERSION}" >> $GITHUB_ENV
-
+    # Build Docker Images
     - name: Build frontend image
       run: |
         cd mern/frontend
-        docker build -t okeymcokoli/mern-frontend:${{ env.VERSION }} .
+        docker build -t okeymcokoli/mern-frontend:v1 .
       env:
         DOCKER_BUILDKIT: 1  # Enable BuildKit for better caching
 
     - name: Build backend image
       run: |
         cd mern/backend
-        docker build -t okeymcokoli/mern-backend:${{ env.VERSION }} .
+        docker build -t okeymcokoli/mern-backend:v1 .
       env:
         DOCKER_BUILDKIT: 1  # Enable BuildKit for better caching
 
@@ -199,11 +174,11 @@ jobs:
 
     - name: Push frontend image to DockerHub
       run: |
-        docker push okeymcokoli/mern-frontend:${{ env.VERSION }}
+        docker push okeymcokoli/mern-frontend:v1
 
     - name: Push backend image to DockerHub
       run: |
-        docker push okeymcokoli/mern-backend:${{ env.VERSION }}
+        docker push okeymcokoli/mern-backend:v1
 
   update-manifests:
     runs-on: ubuntu-latest
@@ -217,4 +192,14 @@ jobs:
 
     - name: Update Kubernetes manifests with new image tags
       run: |
-        # Update the fro
+        # Update the frontend and backend Docker image tags in the manifests
+        sed -i 's|okeymcokoli/mern-frontend:v1|okeymcokoli/mern-frontend:v1|g' manifests/frontend/deployment.yaml
+        sed -i 's|okeymcokoli/mern-backend:v1|okeymcokoli/mern-backend:v1|g' manifests/backend/deployment.yaml
+
+    - name: Commit and push updated manifests
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add manifests/*
+        git commit -m "Update image tags for frontend, backend, and mongodb"
+        git push https://x-access-token:${{ secrets.TOKEN }}@github.com/okeymcokoli/MERN-STACK-DEPLOYMENT.git
