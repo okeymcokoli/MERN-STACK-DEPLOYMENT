@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: okeymcokoli/mern-frontend:v1-run-16-run-16  # Update with your actual image name
+        image: okeymcokoli/mern-frontend:v1-run-17-run-16-run-16  # Update with your actual image name
         ports:
         - containerPort: 5173
         env:
