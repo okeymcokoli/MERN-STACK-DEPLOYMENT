@@ -115,13 +115,19 @@ jobs:
       with:
         node-version: '16'  # specify the Node.js version for both frontend and backend
 
-    # Install dependencies for Frontend (React)
+    # Install frontend dependencies
     - name: Install frontend dependencies
       run: |
         cd mern/frontend
         npm install  # Install frontend dependencies
 
-    # Static Code Analysis for Frontend (React)
+    # Install Cypress and ESLint plugins
+    - name: Install Cypress ESLint plugin
+      run: |
+        cd mern/frontend
+        npm install --save-dev eslint-plugin-cypress
+
+    # Static Code Analysis for Frontend (React + Cypress)
     - name: Run ESLint for frontend
       run: |
         cd mern/frontend
@@ -133,7 +139,7 @@ jobs:
         cd mern/frontend
         npm run test -- --coverage  # assumes `npm run test` is configured to run tests
 
-    # Install dependencies for Backend (Node.js)
+    # Install backend dependencies
     - name: Install backend dependencies
       run: |
         cd mern/backend
@@ -193,13 +199,4 @@ jobs:
     - name: Update Kubernetes manifests with new image tags
       run: |
         # Update the frontend and backend Docker image tags in the manifests
-        sed -i 's|okeymcokoli/mern-frontend:v1|okeymcokoli/mern-frontend:v1|g' manifests/frontend/deployment.yaml
-        sed -i 's|okeymcokoli/mern-backend:v1|okeymcokoli/mern-backend:v1|g' manifests/backend/deployment.yaml
-
-    - name: Commit and push updated manifests
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add manifests/*
-        git commit -m "Update image tags for frontend, backend, and mongodb"
-        git push https://x-access-token:${{ secrets.TOKEN }}@github.com/okeymcokoli/MERN-STACK-DEPLOYMENT.git
+        sed -i 's|okeymcokoli/mern-frontend:v1|okeymcokoli/mer
