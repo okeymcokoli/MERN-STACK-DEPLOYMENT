@@ -165,29 +165,29 @@ jobs:
         cd mern/backend
         npm run test -- --coverage  # assumes `npm run test` is configured to run tests
 
-    # Get the latest tag (or use commit count if no tag is found)
-    - name: Get the latest tag for versioning
+    # Build Docker Images with dynamic versioning (v1, v2, v3)
+    - name: Set version tag based on commit hash
       id: version
       run: |
-        VERSION=$(git describe --tags --abbrev=0 || echo "v0")
-        # Increment version by 1 (extract number and increment it)
-        VERSION_NUMBER=$(echo $VERSION | sed 's/v//')
-        NEXT_VERSION="v$((VERSION_NUMBER+1))"
-        echo "Next version: $NEXT_VERSION"
-        echo "::set-output name=version::$NEXT_VERSION"
+        VERSION="v1"
+        if [[ "${{ github.sha }}" == *"a"* ]]; then
+          VERSION="v2"
+        elif [[ "${{ github.sha }}" == *"b"* ]]; then
+          VERSION="v3"
+        fi
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-    # Build Docker Images with dynamic versioning
     - name: Build frontend image
       run: |
         cd mern/frontend
-        docker build -t okeymcokoli/mern-frontend:${{ steps.version.outputs.version }} .
+        docker build -t okeymcokoli/mern-frontend:${{ env.VERSION }} .
       env:
         DOCKER_BUILDKIT: 1  # Enable BuildKit for better caching
 
     - name: Build backend image
       run: |
         cd mern/backend
-        docker build -t okeymcokoli/mern-backend:${{ steps.version.outputs.version }} .
+        docker build -t okeymcokoli/mern-backend:${{ env.VERSION }} .
       env:
         DOCKER_BUILDKIT: 1  # Enable BuildKit for better caching
 
@@ -199,11 +199,11 @@ jobs:
 
     - name: Push frontend image to DockerHub
       run: |
-        docker push okeymcokoli/mern-frontend:${{ steps.version.outputs.version }}
+        docker push okeymcokoli/mern-frontend:${{ env.VERSION }}
 
     - name: Push backend image to DockerHub
       run: |
-        docker push okeymcokoli/mern-backend:${{ steps.version.outputs.version }}
+        docker push okeymcokoli/mern-backend:${{ env.VERSION }}
 
   update-manifests:
     runs-on: ubuntu-latest
@@ -217,14 +217,4 @@ jobs:
 
     - name: Update Kubernetes manifests with new image tags
       run: |
-        # Update the frontend and backend Docker image tags with new version
-        sed -i "s|okeymcokoli/mern-frontend:v[0-9]*|okeymcokoli/mern-frontend:${{ steps.version.outputs.version }}|g" manifests/frontend/deployment.yaml
-        sed -i "s|okeymcokoli/mern-backend:v[0-9]*|okeymcokoli/mern-backend:${{ steps.version.outputs.version }}|g" manifests/backend/deployment.yaml
-        
-    - name: Commit and push updated manifests
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add manifests/*
-        git commit -m "Update image tags for frontend, backend, and mongodb to ${{ steps.version.outputs.version }}"
-        git push https://x-access-token:${{ secrets.TOKEN }}@github.com/okeymcokoli/MERN-STACK-DEPLOYMENT.git
+        # Update the fro
