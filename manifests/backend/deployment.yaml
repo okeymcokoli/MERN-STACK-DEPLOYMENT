@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: okeymcokoli/mern-backend:v1-run-16  # Update with your actual image name
+        image: okeymcokoli/mern-backend:v1-run-16-run-16  # Update with your actual image name
         ports:
         - containerPort: 5050
         env:
